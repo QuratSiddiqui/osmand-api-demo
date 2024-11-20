@@ -64,6 +64,7 @@ import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.Locale
 
+
 class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
 
     companion object {
@@ -188,7 +189,28 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
             execApiActionImpl(apiActionType, location)
         }
     }
-
+    private fun copyMapFromAssets() {
+        val mapsDir = File(filesDir, "/maps")
+        if (!mapsDir.exists()) {
+            mapsDir.mkdirs()
+        }
+        val mapFile = File(mapsDir, "map.obf")
+        if (!mapFile.exists()) {
+            try {
+                assets.open("your_custom_map.obf").use { inputStream ->
+                    FileOutputStream(mapFile).use { outputStream ->
+                        val buffer = ByteArray(1024)
+                        var length: Int
+                        while (inputStream.read(buffer).also { length = it } > 0) {
+                            outputStream.write(buffer, 0, length)
+                        }
+                    }
+                }
+            } catch (e: IOException) {
+                e.printStackTrace()
+            }
+        }
+    }
     private fun execApiActionImpl(apiActionType: ApiActionType, location: Location? = null) {
         val aidlHelper = mAidlHelper
         val osmandHelper = mOsmAndHelper
