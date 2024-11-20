@@ -11,6 +11,7 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 
+import net.osmand.Location;
 import net.osmand.data.LatLon;
 import net.osmand.data.PointDescription;
 import net.osmand.data.RotatedTileBox;
@@ -63,7 +64,7 @@ public class NavigateMapActivity extends AppCompatActivity {
 
 		//set start location and zoom for map
 		mapTileView.setIntZoom(14);
-		mapTileView.setLatLon(52.3704312, 4.8904288);
+		mapTileView.setLatLon(40.86523, 14.22554);
 	}
 
 	@Override
@@ -91,13 +92,16 @@ public class NavigateMapActivity extends AppCompatActivity {
 					LatLon latLon = NativeUtilities.getLatLonFromPixel(mapTileView.getMapRenderer(), tileBox, point.x, point.y);
 
 					if (start == null) {
-						start = latLon;
+						///start = latLon;
+						start =new LatLon (40.86523, 14.22554);
 						app.showShortToastMessage("Start point " + latLon.getLatitude() + " " + latLon.getLongitude());
 					} else if (finish == null) {
-						finish = latLon;
+						//finish = latLon;
+						finish =new LatLon (40.86382, 14.22201);
 						app.showShortToastMessage("Finish point " + latLon.getLatitude() + " " + latLon.getLongitude());
-						startNavigation();
+
 					}
+					startNavigation();
 					return true;
 				}
 			};
@@ -113,7 +117,7 @@ public class NavigateMapActivity extends AppCompatActivity {
 		TargetPointsHelper targetPointsHelper = app.getTargetPointsHelper();
 
 		targetPointsHelper.setStartPoint(start, false, new PointDescription(start.getLatitude(), start.getLongitude()));
-		targetPointsHelper.navigateToPoint(finish, true, -1, new PointDescription(finish.getLatitude(), finish.getLongitude()));
+		targetPointsHelper.navigateToPoint(finish, true, -1, new PointDescription(40.86494, 14.22672));
 
 		app.getOsmandMap().getMapActions().enterRoutePlanningModeGivenGpx(null, start, null, true, false);
 
@@ -121,7 +125,8 @@ public class NavigateMapActivity extends AppCompatActivity {
 		routingHelper.setFollowingMode(true);
 		routingHelper.setRoutePlanningMode(false);
 		routingHelper.notifyIfRouteIsCalculated();
-		routingHelper.setCurrentLocation(app.getLocationProvider().getLastKnownLocation(), false);
+		//routingHelper.setCurrentLocation(app.getLocationProvider().getLastKnownLocation(), false);
+		routingHelper.setCurrentLocation(new Location("start",40.86483, 14.22154), false);
 
 		OsmAndLocationProvider.requestFineLocationPermissionIfNeeded(this);
 

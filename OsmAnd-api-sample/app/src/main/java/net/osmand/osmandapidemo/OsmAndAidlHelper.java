@@ -1641,7 +1641,7 @@ public class OsmAndAidlHelper {
 						}
 						break;
 					case COPY_FILE_WRITE_LOCK_ERROR :
-						if (retryCounter < MAX_RETRY_COUNT) {
+							if (retryCounter < MAX_RETRY_COUNT) {
 //							log.error("File is writing by another process. Retry in $retryInterval ms.")
 							retryCounter++;
 							Thread.sleep(retryInterval);

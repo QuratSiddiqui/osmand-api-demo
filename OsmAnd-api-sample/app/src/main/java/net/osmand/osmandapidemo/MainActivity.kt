@@ -59,6 +59,7 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.FileNotFoundException
 import java.io.FileOutputStream
+import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
 import java.util.Locale
@@ -96,7 +97,7 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
         const val DEMO_INTENT_URI = "osmand_api_demo://main_activity"
 
         val CITIES = arrayOf(
-                Location("Bruxelles - Brussel", 50.8465565, 4.351697, 50.83477, 4.4068823),
+            /* Location("Bruxelles - Brussel", 50.8465565, 4.351697, 50.83477, 4.4068823),
                 Location("London", 51.5073219, -0.1276474, 51.52753, -0.07244986),
                 Location("Paris", 48.8566101, 2.3514992, 48.87588, 2.428313),
                 Location("Budapest", 47.4983815, 19.0404707, 47.48031, 19.067793),
@@ -107,13 +108,18 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                 Location("Ottawa", 45.4210328, -75.6900219, 45.386864, -75.783356),
                 Location("Panama", 8.9710438, -79.5340599, 8.992735, -79.5157),
                 Location("Minsk", 53.9072394, 27.5863608, 53.9022545, 27.5619212),
-                Location("Amsterdam", 52.3704312, 4.8904288, 52.3693012, 4.9013307)
+                Location("Amsterdam", 52.3704312, 4.8904288, 52.3693012, 4.9013307),
+               */
+            Location("Enterance1", 40.86523, 14.22554, 40.86523, 14.22554),
+            Location("Destination1", 40.86382, 14.22201, 40.86382, 14.22201)
+            //   Location("Enterance2", 40.86523, 14.22554, 40.86483, 14.22154)
+
         )
 
         val GPX_COLORS = arrayOf(
-                "", "red", "orange", "lightblue", "blue", "purple",
-                "translucent_red", "translucent_orange", "translucent_lightblue",
-                "translucent_blue", "translucent_purple"
+            "", "red", "orange", "lightblue", "blue", "purple",
+            "translucent_red", "translucent_orange", "translucent_lightblue",
+            "translucent_blue", "translucent_purple"
         )
 
         private const val APP_MODE_CAR = "car"
@@ -143,7 +149,8 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
         private val appModesNone = emptyList<String>()
         private val appModesPedestrian = listOf(APP_MODE_PEDESTRIAN)
         private val appModesPedestrianBicycle = listOf(APP_MODE_PEDESTRIAN, APP_MODE_BICYCLE)
-        private val appModesExceptAirBoatDefault = listOf(APP_MODE_CAR, APP_MODE_BICYCLE, APP_MODE_PEDESTRIAN)
+        private val appModesExceptAirBoatDefault =
+            listOf(APP_MODE_CAR, APP_MODE_BICYCLE, APP_MODE_PEDESTRIAN)
     }
 
     private lateinit var binding: ActivityMainBinding
@@ -164,7 +171,11 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
 
     private val logcatToastQueue = ToastQueue()
 
-    fun execApiAction(apiActionType: ApiActionType, delayed: Boolean = true, location: Location? = null) {
+    fun execApiAction(
+        apiActionType: ApiActionType,
+        delayed: Boolean = true,
+        location: Location? = null
+    ) {
         if (location != null) {
             lastLatitude = location.lat
             lastLongitude = location.lon
@@ -184,48 +195,83 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
         if (aidlHelper != null && osmandHelper != null) {
             when (apiActionType) {
                 ApiActionType.AIDL_SET_NAV_DRAWER_ITEMS -> {
-                    aidlHelper.setNavDrawerItems(packageName, listOf(getString(R.string.app_name)), listOf(DEMO_INTENT_URI), listOf("ic_action_travel"), listOf(-1))
+                    aidlHelper.setNavDrawerItems(
+                        packageName,
+                        listOf(getString(R.string.app_name)),
+                        listOf(DEMO_INTENT_URI),
+                        listOf("ic_action_travel"),
+                        listOf(-1)
+                    )
                 }
+
                 ApiActionType.AIDL_REFRESH_MAP -> {
                     aidlHelper.refreshMap()
                 }
+
                 ApiActionType.AIDL_ADD_FAVORITE_GROUP -> {
                     aidlHelper.addFavoriteGroup("New group", "purple", false)
                 }
+
                 ApiActionType.AIDL_UPDATE_FAVORITE_GROUP -> {
-                    aidlHelper.updateFavoriteGroup("New group", "purple", false, "New group 1", "red", true)
+                    aidlHelper.updateFavoriteGroup(
+                        "New group",
+                        "purple",
+                        false,
+                        "New group 1",
+                        "red",
+                        true
+                    )
                 }
+
                 ApiActionType.AIDL_REMOVE_FAVORITE_GROUP -> {
                     aidlHelper.removeFavoriteGroup("New group")
                 }
+
                 ApiActionType.AIDL_REGISTER_FOR_UPDATES -> {
                     aidlHelper.setUpdateListener(object : OsmAndAidlHelper.UpdateListener {
                         override fun onUpdatePing() {
                             runOnUiThread {
-                                Toast.makeText(this@MainActivity, "Ping from OsmAnd every 7 sec", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Ping from OsmAnd every 7 sec",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                     })
                     callbackKeys[KEY_UPDATES_LISTENER] = aidlHelper.registerForUpdates(7000)
                 }
+
                 ApiActionType.AIDL_UNREGISTER_FORM_UPDATES -> {
                     if (callbackKeys.containsKey(KEY_UPDATES_LISTENER)) {
                         aidlHelper.unregisterFromUpdates(callbackKeys[KEY_UPDATES_LISTENER]!!)
                         callbackKeys.remove(KEY_UPDATES_LISTENER)
-                        Toast.makeText(this@MainActivity, "Unsubscribed from OsmAnd pings", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Unsubscribed from OsmAnd pings",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
-                        Toast.makeText(this@MainActivity, "You need first to subscribe for updates from OsmAnd", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "You need first to subscribe for updates from OsmAnd",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
+
                 ApiActionType.AIDL_ADD_MAP_LAYER -> {
                     aidlHelper.addMapLayer(MAP_LAYER_ID, "OSMO Layer", 5.5f, null, true)
                 }
+
                 ApiActionType.AIDL_REMOVE_MAP_LAYER -> {
                     aidlHelper.removeMapLayer(MAP_LAYER_ID)
                 }
+
                 ApiActionType.AIDL_UPDATE_MAP_LAYER -> {
                     aidlHelper.updateMapLayer(MAP_LAYER_ID, "OSMO Layer Updated", 6.5f, null, true)
                 }
+
                 ApiActionType.AIDL_IMPORT_GPX -> {
                     val args = Bundle()
                     args.putInt(SEND_AS_RAW_DATA_REQUEST_CODE_KEY, REQUEST_SHOW_GPX_RAW_DATA_AIDL)
@@ -234,12 +280,15 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     openGpxDialogFragment.arguments = args
                     openGpxDialogFragment.show(supportFragmentManager, OpenGpxDialogFragment.TAG)
                 }
+
                 ApiActionType.AIDL_SHOW_GPX -> {
                     aidlHelper.showGpx(GPX_FILE_NAME)
                 }
+
                 ApiActionType.AIDL_HIDE_GPX -> {
                     aidlHelper.hideGpx(GPX_FILE_NAME)
                 }
+
                 ApiActionType.AIDL_GET_ACTIVE_GPX_FILES -> {
                     val activeGpxFiles = aidlHelper.activeGpxFiles
                     val sb = StringBuilder()
@@ -256,52 +305,72 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     }
                     showOsmandInfoDialog(sb.toString())
                 }
+
                 ApiActionType.AIDL_START_GPX_REC -> {
                     aidlHelper.startGpxRecording()
                 }
+
                 ApiActionType.AIDL_STOP_GPX_REC -> {
                     aidlHelper.stopGpxRecording()
                 }
+
                 ApiActionType.AIDL_STOP_REC -> {
                     aidlHelper.stopRecording()
                 }
+
                 ApiActionType.AIDL_NAVIGATE_GPX -> {
                     val args = Bundle()
-                    args.putInt(SEND_AS_RAW_DATA_REQUEST_CODE_KEY, REQUEST_NAVIGATE_GPX_RAW_DATA_AIDL)
+                    args.putInt(
+                        SEND_AS_RAW_DATA_REQUEST_CODE_KEY,
+                        REQUEST_NAVIGATE_GPX_RAW_DATA_AIDL
+                    )
                     args.putInt(SEND_AS_URI_REQUEST_CODE_KEY, REQUEST_NAVIGATE_GPX_URI_AIDL)
                     val openGpxDialogFragment = OpenGpxDialogFragment()
                     openGpxDialogFragment.arguments = args
                     openGpxDialogFragment.show(supportFragmentManager, OpenGpxDialogFragment.TAG)
                 }
+
                 ApiActionType.AIDL_REMOVE_GPX -> {
                     aidlHelper.removeGpx(GPX_FILE_NAME)
                 }
+
                 ApiActionType.AIDL_HIDE_DRAWER_PROFILE -> {
-                    aidlHelper.setDisabledPatterns(listOf(OsmAndCustomizationConstants.DRAWER_SWITCH_PROFILE_ID,
-                            OsmAndCustomizationConstants.DRAWER_CONFIGURE_PROFILE_ID))
+                    aidlHelper.setDisabledPatterns(
+                        listOf(
+                            OsmAndCustomizationConstants.DRAWER_SWITCH_PROFILE_ID,
+                            OsmAndCustomizationConstants.DRAWER_CONFIGURE_PROFILE_ID
+                        )
+                    )
                 }
+
                 ApiActionType.AIDL_SET_ENABLED_UI_IDS -> {
                     val enabledIds = getFeaturesEnabledIds()
                     aidlHelper.setEnabledIds(enabledIds)
                 }
+
                 ApiActionType.AIDL_SET_DISABLED_UI_IDS -> {
                     val disabledIds = getFeaturesDisabledIds()
                     aidlHelper.setDisabledIds(disabledIds)
                 }
+
                 ApiActionType.AIDL_SET_ENABLED_MENU_PATTERNS -> {
                     val enabledPatterns = getFeaturesEnabledPatterns()
                     aidlHelper.setEnabledPatterns(enabledPatterns)
                 }
+
                 ApiActionType.AIDL_SET_DISABLED_MENU_PATTERNS -> {
                     val disabledPatterns = getFeaturesDisabledPatterns()
                     aidlHelper.setDisabledPatterns(disabledPatterns)
                 }
+
                 ApiActionType.AIDL_REG_WIDGET_VISIBILITY -> {
                     aidlHelper.regWidgetVisibility("ruler", null)
                 }
+
                 ApiActionType.AIDL_REG_WIDGET_AVAILABILITY -> {
                     aidlHelper.regWidgetAvailability("bearing", listOf(APP_MODE_BOAT))
                 }
+
                 ApiActionType.AIDL_CUSTOMIZE_OSMAND_SETTINGS -> {
                     val bundle = Bundle().apply {
                         putString("application_mode", APP_MODE_CAR)
@@ -314,6 +383,7 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     }
                     aidlHelper.customizeOsmandSettings(OSMAND_SHARED_PREFERENCES_NAME, bundle)
                 }
+
                 ApiActionType.AIDL_GET_IMPORTED_GPX_FILES -> {
                     val importedGpxFiles = aidlHelper.importedGpx
                     val sb = StringBuilder()
@@ -330,6 +400,7 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     }
                     showOsmandInfoDialog(sb.toString())
                 }
+
                 ApiActionType.AIDL_GET_SQLITEDB_FILES -> {
                     val sqliteDbFiles = aidlHelper.sqliteDbFiles
                     val sb = StringBuilder()
@@ -346,6 +417,7 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     }
                     showOsmandInfoDialog(sb.toString())
                 }
+
                 ApiActionType.AIDL_GET_ACTIVE_SQLITEDB_FILES -> {
                     val activeSqliteDbFiles = aidlHelper.activeSqliteDbFiles
                     val sb = StringBuilder()
@@ -362,57 +434,83 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     }
                     showOsmandInfoDialog(sb.toString())
                 }
+
                 ApiActionType.AIDL_SHOW_SQLITEDB_FILE -> {
                     aidlHelper.showSqliteDbFile(SQLDB_FILE_NAME)
                 }
+
                 ApiActionType.AIDL_HIDE_SQLITEDB_FILE -> {
                     aidlHelper.hideSqliteDbFile(SQLDB_FILE_NAME)
                 }
+
                 ApiActionType.AIDL_SET_NAV_DRAWER_LOGO -> {
                     val resId = R.drawable.ic_osmand_logo
                     val pack = resources.getResourcePackageName(resId)
                     val type = resources.getResourceTypeName(resId)
                     val entry = resources.getResourceEntryName(resId)
-                    val logoUri = Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://$pack/$type/$entry")
+                    val logoUri =
+                        Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://$pack/$type/$entry")
 
-                    aidlHelper.setNavDrawerLogoWithParams(logoUri.toString(), packageName, DEMO_INTENT_URI)
+                    aidlHelper.setNavDrawerLogoWithParams(
+                        logoUri.toString(),
+                        packageName,
+                        DEMO_INTENT_URI
+                    )
                 }
+
                 ApiActionType.AIDL_SET_NAV_DRAWER_FOOTER -> {
-                    aidlHelper.setNavDrawerFooterWithParams(packageName, DEMO_INTENT_URI, getString(R.string.app_name))
+                    aidlHelper.setNavDrawerFooterWithParams(
+                        packageName,
+                        DEMO_INTENT_URI,
+                        getString(R.string.app_name)
+                    )
                 }
+
                 ApiActionType.AIDL_RESTORE_OSMAND -> {
                     aidlHelper.restoreOsmand()
                 }
+
                 ApiActionType.AIDL_CHANGE_PLUGIN_STATE -> {
                     aidlHelper.changePluginState(OsmAndCustomizationConstants.PLUGIN_RASTER_MAPS, 1)
                 }
+
                 ApiActionType.AIDL_REGISTER_FOR_OSMAND_INITIALIZATION -> {
-                    aidlHelper.setOsmandInitializedListener(object : OsmAndAidlHelper.OsmandInitializedListener {
+                    aidlHelper.setOsmandInitializedListener(object :
+                        OsmAndAidlHelper.OsmandInitializedListener {
                         override fun onOsmandInitilized() {
                             runOnUiThread {
-                                Toast.makeText(this@MainActivity, "Osmand Initilized", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this@MainActivity,
+                                    "Osmand Initilized",
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                     })
                     aidlHelper.registerForOsmandInitListener()
                 }
+
                 ApiActionType.AIDL_GET_BITMAP_FOR_GPX -> {
-                    aidlHelper.setGpxBitmapCreatedListener(object : OsmAndAidlHelper.GpxBitmapCreatedListener {
+                    aidlHelper.setGpxBitmapCreatedListener(object :
+                        OsmAndAidlHelper.GpxBitmapCreatedListener {
                         override fun onGpxBitmapCreated(bitmap: Bitmap?) {
                             gpxBitmap = bitmap
                             val gpxDialogFragment = GpxBitmapDialogFragment()
                             supportFragmentManager.beginTransaction()
-                                    .add(gpxDialogFragment, null)
-                                    .commitAllowingStateLoss()
+                                .add(gpxDialogFragment, null)
+                                .commitAllowingStateLoss()
                         }
                     })
                     requestChooseFile(REQUEST_GET_GPX_BITMAP_URI_AIDL)
                 }
+
                 ApiActionType.AIDL_COPY_FILE_TO_OSMAND -> {
                     requestChooseFile(REQUEST_COPY_FILE)
                 }
+
                 ApiActionType.AIDL_REGISTER_FOR_NAV_UPDATES -> {
-                    aidlHelper.setNavigationInfoUpdateListener(object : OsmAndAidlHelper.NavigationInfoUpdateListener {
+                    aidlHelper.setNavigationInfoUpdateListener(object :
+                        OsmAndAidlHelper.NavigationInfoUpdateListener {
                         override fun onNavigationInfoUpdate(directionInfo: ADirectionInfo?) {
                             runOnUiThread {
                                 val text = "NavigationInfoUpdate"
@@ -420,18 +518,32 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                             }
                         }
                     })
-                    callbackKeys[KEY_NAV_INFO_LISTENER] = aidlHelper.registerForNavigationUpdates(true, 0)
+                    callbackKeys[KEY_NAV_INFO_LISTENER] =
+                        aidlHelper.registerForNavigationUpdates(true, 0)
                 }
+
                 ApiActionType.AIDL_UNREGISTER_FOR_NAV_UPDATES -> {
                     if (callbackKeys.containsKey(KEY_NAV_INFO_LISTENER)) {
-                        aidlHelper.registerForNavigationUpdates(false, callbackKeys[KEY_NAV_INFO_LISTENER]!!)
+                        aidlHelper.registerForNavigationUpdates(
+                            false,
+                            callbackKeys[KEY_NAV_INFO_LISTENER]!!
+                        )
                         callbackKeys.remove(KEY_NAV_INFO_LISTENER)
-                        Toast.makeText(this@MainActivity, "Unsubscribed from OsmAnd pings", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Unsubscribed from OsmAnd pings",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
-                        Toast.makeText(this@MainActivity, "You need first to subscribe for updates from OsmAnd", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "You need first to subscribe for updates from OsmAnd",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
-               ApiActionType.AIDL_GET_AVOID_ROADS -> {
+
+                ApiActionType.AIDL_GET_AVOID_ROADS -> {
                     val list = arrayListOf<ABlockedRoad>()
                     aidlHelper.getBlockedRoads(list)
                     val text = SpannableStringBuilder("Avoid roads size: ${list.size} \n")
@@ -440,68 +552,95 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     }
                     Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show()
                 }
-               ApiActionType.AIDL_ADD_AVOID_ROAD -> {
-                    aidlHelper.addRoadBlock(ABlockedRoad(0,52.37391, 4.90193, 0.0, "Api road block", "car"  ))
+
+                ApiActionType.AIDL_ADD_AVOID_ROAD -> {
+                    aidlHelper.addRoadBlock(
+                        ABlockedRoad(
+                            0,
+                            52.37391,
+                            4.90193,
+                            0.0,
+                            "Api road block",
+                            "car"
+                        )
+                    )
                 }
-               ApiActionType.AIDL_REMOVE_AVOID_ROAD -> {
-                    aidlHelper.removeRoadBlock(ABlockedRoad(0,52.37391, 4.90193, 0.0, "Api road block", "car"  ))
+
+                ApiActionType.AIDL_REMOVE_AVOID_ROAD -> {
+                    aidlHelper.removeRoadBlock(
+                        ABlockedRoad(
+                            0,
+                            52.37391,
+                            4.90193,
+                            0.0,
+                            "Api road block",
+                            "car"
+                        )
+                    )
                 }
+
                 ApiActionType.AIDL_ADD_CONTEXT_MENU_BUTTONS -> {
                     aidlHelper.setContextButtonClickListener(OsmAndAidlHelper.ContextButtonClickListener { buttonId, pointId, layerId ->
                         runOnUiThread {
-                            val text = "Context menu button clicked! buttonId $buttonId pointId $pointId layerId $layerId"
+                            val text =
+                                "Context menu button clicked! buttonId $buttonId pointId $pointId layerId $layerId"
                             Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show()
                         }
                     })
                     aidlHelper.addContextMenuButtons(
-                            1,
-                            "LeftText",
-                            "RightText",
-                            "ic_action_start_navigation",
-                            "ic_action_start_navigation",
-                            true,
-                            true,
-                            2,
-                            "LeftText4",
-                            "RightText4",
-                            "ic_action_start_navigation",
-                            "ic_action_start_navigation",
-                            true,
-                            true,
-                            "Buttons",
-                            packageName,
-                            MAP_LAYER_ID,
-                            18,
-                            emptyList()
+                        1,
+                        "LeftText",
+                        "RightText",
+                        "ic_action_start_navigation",
+                        "ic_action_start_navigation",
+                        true,
+                        true,
+                        2,
+                        "LeftText4",
+                        "RightText4",
+                        "ic_action_start_navigation",
+                        "ic_action_start_navigation",
+                        true,
+                        true,
+                        "Buttons",
+                        packageName,
+                        MAP_LAYER_ID,
+                        18,
+                        emptyList()
                     )
                 }
+
                 ApiActionType.AIDL_REMOVE_CONTEXT_MENU_BUTTONS -> {
                     aidlHelper.removeContextMenuButtons("Buttons", 18)
                 }
+
                 ApiActionType.AIDL_UPDATE_CONTEXT_MENU_BUTTONS -> {
                     aidlHelper.updateContextMenuButtons(
-                            1,
-                            "LeftText2",
-                            "RightText2",
-                            "ic_action_start_navigation",
-                            "ic_action_start_navigation",
-                            true,
-                            true,
-                            2,
-                            "LeftText3",
-                            "RightText3",
-                            "ic_action_start_navigation",
-                            "ic_action_start_navigation",
-                            true,
-                            true,
-                            "Buttons",
-                            packageName,
-                            MAP_LAYER_ID,
-                            18,
-                            emptyList())
+                        1,
+                        "LeftText2",
+                        "RightText2",
+                        "ic_action_start_navigation",
+                        "ic_action_start_navigation",
+                        true,
+                        true,
+                        2,
+                        "LeftText3",
+                        "RightText3",
+                        "ic_action_start_navigation",
+                        "ic_action_start_navigation",
+                        true,
+                        true,
+                        "Buttons",
+                        packageName,
+                        MAP_LAYER_ID,
+                        18,
+                        emptyList()
+                    )
                 }
+
                 ApiActionType.AIDL_ARE_OSMAND_SETTINGS_CUSTOMIZED -> {
-                    val settingsCustomized = aidlHelper.areOsmandSettingsCustomized(OSMAND_SHARED_PREFERENCES_NAME)
+                    val settingsCustomized =
+                        aidlHelper.areOsmandSettingsCustomized(OSMAND_SHARED_PREFERENCES_NAME)
                     val text = if (settingsCustomized) {
                         "OsmAnd settings were customized"
                     } else {
@@ -509,17 +648,34 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     }
                     Toast.makeText(this@MainActivity, text, Toast.LENGTH_SHORT).show()
                 }
+
                 ApiActionType.AIDL_SET_CUSTOMIZATION -> {
 
                     val resId = R.drawable.ic_osmand_logo
                     val pack = resources.getResourcePackageName(resId)
                     val type = resources.getResourceTypeName(resId)
                     val entry = resources.getResourceEntryName(resId)
-                    val logoUri = Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://$pack/$type/$entry")
+                    val logoUri =
+                        Uri.parse("${ContentResolver.SCHEME_ANDROID_RESOURCE}://$pack/$type/$entry")
 
-                    val navDrawerHeaderParams = NavDrawerHeaderParams(logoUri.toString(), packageName, DEMO_INTENT_URI)
-                    val navDrawerFooterParams = NavDrawerFooterParams(packageName, DEMO_INTENT_URI, resources.getString(R.string.app_name))
-                    val navDrawerItemsParams = SetNavDrawerItemsParams(packageName, listOf(NavDrawerItem(getString(R.string.set_customization), DEMO_INTENT_URI, "ic_action_settings", -1)))
+                    val navDrawerHeaderParams =
+                        NavDrawerHeaderParams(logoUri.toString(), packageName, DEMO_INTENT_URI)
+                    val navDrawerFooterParams = NavDrawerFooterParams(
+                        packageName,
+                        DEMO_INTENT_URI,
+                        resources.getString(R.string.app_name)
+                    )
+                    val navDrawerItemsParams = SetNavDrawerItemsParams(
+                        packageName,
+                        listOf(
+                            NavDrawerItem(
+                                getString(R.string.set_customization),
+                                DEMO_INTENT_URI,
+                                "ic_action_settings",
+                                -1
+                            )
+                        )
+                    )
 
                     val featuresEnabledIds = getFeaturesEnabledIds()
                     val featuresDisabledIds = getFeaturesDisabledIds()
@@ -528,80 +684,174 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     val visibilityWidgetsParams = getVisibilityWidgetsParams()
                     val availabilityWidgetsParams = getAvailabilityWidgetsParams()
                     val settingsParams = getCustomOsmandSettingsParams()
-                    val pluginParams = arrayListOf(PluginParams(OsmAndCustomizationConstants.PLUGIN_RASTER_MAPS, 1))
+                    val pluginParams = arrayListOf(
+                        PluginParams(
+                            OsmAndCustomizationConstants.PLUGIN_RASTER_MAPS,
+                            1
+                        )
+                    )
 
-                    aidlHelper.setCustomization(settingsParams, navDrawerHeaderParams, navDrawerFooterParams,
-                            navDrawerItemsParams, visibilityWidgetsParams, availabilityWidgetsParams, pluginParams,
-                            featuresEnabledIds, featuresDisabledIds, featuresEnabledPatterns, featuresDisabledPatterns
+                    aidlHelper.setCustomization(
+                        settingsParams,
+                        navDrawerHeaderParams,
+                        navDrawerFooterParams,
+                        navDrawerItemsParams,
+                        visibilityWidgetsParams,
+                        availabilityWidgetsParams,
+                        pluginParams,
+                        featuresEnabledIds,
+                        featuresDisabledIds,
+                        featuresEnabledPatterns,
+                        featuresDisabledPatterns
                     )
                 }
+
                 ApiActionType.AIDL_SET_UI_MARGINS -> {
                     val profileKeys = listOf(APP_MODE_CAR, APP_MODE_BOAT)
-                    val success = aidlHelper.setMapMargins(10, 20, 60, 20,
-                            profileKeys)
+                    val success = aidlHelper.setMapMargins(
+                        10, 20, 60, 20,
+                        profileKeys
+                    )
                     if (success) {
-                        Toast.makeText(this@MainActivity, "UI margins set for $profileKeys", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "UI margins set for $profileKeys",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
-                        Toast.makeText(this@MainActivity, "Failed to set UI margins", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Failed to set UI margins",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
+
                 ApiActionType.AIDL_REGISTER_FOR_VOICE_ROUTE_MESSAGES -> {
                     aidlHelper.setVoiceRouterNotifyListener(VoiceRouterNotifyListener { params ->
                         runOnUiThread {
                             if (params != null) {
-                                Toast.makeText(this@MainActivity, "onVoiceRouterNotify " +
-                                        "\ncmds: ${params.commands}" +
-                                        "\nplayed: ${params.played}", Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    this@MainActivity, "onVoiceRouterNotify " +
+                                            "\ncmds: ${params.commands}" +
+                                            "\nplayed: ${params.played}", Toast.LENGTH_SHORT
+                                ).show()
                             }
                         }
                     })
-                    callbackKeys[KEY_NAV_VOICE_INFO_LISTENER] = aidlHelper.registerForVoiceRouterMessages(true, 0)
+                    callbackKeys[KEY_NAV_VOICE_INFO_LISTENER] =
+                        aidlHelper.registerForVoiceRouterMessages(true, 0)
                 }
+
                 ApiActionType.AIDL_UNREGISTER_FROM_VOICE_ROUTE_MESSAGES -> {
                     if (callbackKeys.containsKey(KEY_NAV_VOICE_INFO_LISTENER)) {
-                        aidlHelper.registerForVoiceRouterMessages(false, callbackKeys[KEY_NAV_VOICE_INFO_LISTENER]!!)
+                        aidlHelper.registerForVoiceRouterMessages(
+                            false,
+                            callbackKeys[KEY_NAV_VOICE_INFO_LISTENER]!!
+                        )
                         callbackKeys.remove(KEY_NAV_VOICE_INFO_LISTENER)
-                        Toast.makeText(this@MainActivity, "Unsubscribed from voice updates", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Unsubscribed from voice updates",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
-                        Toast.makeText(this@MainActivity, "You need first to subscribe for voice updates from OsmAnd", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "You need first to subscribe for voice updates from OsmAnd",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
+
                 ApiActionType.AIDL_REMOVE_ALL_ACTIVE_MAP_MARKERS -> {
                     aidlHelper.removeAllActiveMapMarkers()
                 }
+
                 ApiActionType.AIDL_ADD_FIRST_MAP_WIDGET -> {
-                    aidlHelper.addMapWidget("111", "ic_action_speed", "AIDL Speed", "widget_speed_day", "widget_speed_night", "10", "km/h", 50, getDemoIntent())
+                    aidlHelper.addMapWidget(
+                        "111",
+                        "ic_action_speed",
+                        "AIDL Speed",
+                        "widget_speed_day",
+                        "widget_speed_night",
+                        "10",
+                        "km/h",
+                        50,
+                        getDemoIntent()
+                    )
                 }
+
                 ApiActionType.AIDL_ADD_SECOND_MAP_WIDGET -> {
-                    aidlHelper.addMapWidget("222", "ic_action_time", "AIDL Time", "widget_time_day", "widget_time_night", getTimeStr(), "", 51, getDemoIntent())
+                    aidlHelper.addMapWidget(
+                        "222",
+                        "ic_action_time",
+                        "AIDL Time",
+                        "widget_time_day",
+                        "widget_time_night",
+                        getTimeStr(),
+                        "",
+                        51,
+                        getDemoIntent()
+                    )
                 }
+
                 ApiActionType.AIDL_REMOVE_FIRST_MAP_WIDGET -> {
                     aidlHelper.removeMapWidget("111")
                 }
+
                 ApiActionType.AIDL_REMOVE_SECOND_MAP_WIDGET -> {
                     aidlHelper.removeMapWidget("222")
                 }
+
                 ApiActionType.AIDL_UPDATE_FIRST_MAP_WIDGET -> {
-                    aidlHelper.updateMapWidget("111", "ic_action_speed", "AIDL Speed", "widget_speed_day", "widget_speed_night", "1" + counter++, "km/h", 50, getDemoIntent())
+                    aidlHelper.updateMapWidget(
+                        "111",
+                        "ic_action_speed",
+                        "AIDL Speed",
+                        "widget_speed_day",
+                        "widget_speed_night",
+                        "1" + counter++,
+                        "km/h",
+                        50,
+                        getDemoIntent()
+                    )
                 }
+
                 ApiActionType.AIDL_UPDATE_SECOND_MAP_WIDGET -> {
-                    aidlHelper.updateMapWidget("222", "ic_action_time", "AIDL Time", "widget_time_day", "widget_time_night", getTimeStr(), "", 51, getDemoIntent())
+                    aidlHelper.updateMapWidget(
+                        "222",
+                        "ic_action_time",
+                        "AIDL Time",
+                        "widget_time_day",
+                        "widget_time_night",
+                        getTimeStr(),
+                        "",
+                        51,
+                        getDemoIntent()
+                    )
                 }
+
                 ApiActionType.AIDL_PAUSE_NAVIGATION -> {
                     aidlHelper.pauseNavigation()
                 }
+
                 ApiActionType.AIDL_RESUME_NAVIGATION -> {
                     aidlHelper.resumeNavigation()
                 }
+
                 ApiActionType.AIDL_STOP_NAVIGATION -> {
                     aidlHelper.stopNavigation()
                 }
+
                 ApiActionType.AIDL_MUTE_NAVIGATION -> {
                     aidlHelper.muteNavigation()
                 }
+
                 ApiActionType.AIDL_UNMUTE_NAVIGATION -> {
                     aidlHelper.unmuteNavigation()
                 }
+
                 ApiActionType.AIDL_IMPORT_PROFILE -> {
                     val fileName = "Driving_test.osf"
                     val sharedDir = File(cacheDir, "share")
@@ -626,54 +876,79 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     val silent = true
                     aidlHelper.importProfile(fileUri, settingsTypeList, replace, silent)
                 }
+
                 ApiActionType.AIDL_EXPORT_PROFILE -> {
                     val profileKey = "car"
-                    val settingsTypeList = arrayListOf(AExportSettingsType.QUICK_ACTIONS, AExportSettingsType.MAP_SOURCES)
+                    val settingsTypeList = arrayListOf(
+                        AExportSettingsType.QUICK_ACTIONS,
+                        AExportSettingsType.MAP_SOURCES
+                    )
                     val success = aidlHelper.exportProfile(profileKey, settingsTypeList)
                     if (success) {
-                        Toast.makeText(this@MainActivity, "Profile $profileKey is exported", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Profile $profileKey is exported",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
-                        Toast.makeText(this@MainActivity, "Failed export profile $profileKey", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            this@MainActivity,
+                            "Failed export profile $profileKey",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
+
                 ApiActionType.AIDL_IS_FRAGMENT_OPEN -> {
                     val open = aidlHelper.isFragmentOpen
                     if (open) {
-                        Toast.makeText(this@MainActivity, "Fragment is open", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "Fragment is open", Toast.LENGTH_SHORT)
+                            .show()
                     } else {
-                        Toast.makeText(this@MainActivity, "Fragment is closed", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "Fragment is closed", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
+
                 ApiActionType.AIDL_IS_MENU_OPEN -> {
                     val open = aidlHelper.isMenuOpen
                     if (open) {
                         Toast.makeText(this@MainActivity, "Menu is open", Toast.LENGTH_SHORT).show()
                     } else {
-                        Toast.makeText(this@MainActivity, "Menu is closed", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(this@MainActivity, "Menu is closed", Toast.LENGTH_SHORT)
+                            .show()
                     }
                 }
+
                 ApiActionType.INTENT_PAUSE_NAVIGATION -> {
                     osmandHelper.pauseNavigation()
                 }
+
                 ApiActionType.INTENT_RESUME_NAVIGATION -> {
                     osmandHelper.resumeNavigation()
                 }
+
                 ApiActionType.INTENT_STOP_NAVIGATION -> {
                     osmandHelper.stopNavigation()
                 }
+
                 ApiActionType.INTENT_MUTE_NAVIGATION -> {
                     osmandHelper.muteNavigation()
                 }
+
                 ApiActionType.INTENT_UNMUTE_NAVIGATION -> {
                     osmandHelper.umuteNavigation()
                 }
+
                 ApiActionType.AIDL_EXIT_APP -> {
                     aidlHelper.exitApp(false)
                 }
+
                 ApiActionType.AIDL_GET_TEXT -> {
-                    val text =  aidlHelper.getText("daynight_mode_auto", Locale.GERMAN)
+                    val text = aidlHelper.getText("daynight_mode_auto", Locale.GERMAN)
                     Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
                 }
+
                 ApiActionType.AIDL_GET_PREFERENCE -> {
                     val prefId = "show_map_markers"
                     val appMode = "car"
@@ -681,6 +956,7 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     val text = "Preference Id: $prefId profile: $appMode value: $value"
                     Toast.makeText(this, text, Toast.LENGTH_SHORT).show()
                 }
+
                 ApiActionType.AIDL_SET_PREFERENCE -> {
                     aidlHelper.setPreferenceValue("show_map_markers", true.toString(), "car")
 
@@ -690,6 +966,7 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                     aidlHelper.setPreferenceValue("impassable_roads_descriptions", "", null)
                     aidlHelper.setPreferenceValue("impassable_roads_app_mode_keys", "", null)
                 }
+
                 ApiActionType.AIDL_REGISTER_FOR_LISTEN_LOGS -> {
                     val titles = arrayOf("Debug", "Info", "Warn", "Error")
                     val values = arrayOf("D", "I", "W", "E")
@@ -710,111 +987,181 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                                     for (message in params.logs) {
                                         fullMessage += "\n" + message
                                     }
-                                    logcatToastQueue.showToast(this, "Logcat (${params.filterLevel}):${fullMessage}")
+                                    logcatToastQueue.showToast(
+                                        this,
+                                        "Logcat (${params.filterLevel}):${fullMessage}"
+                                    )
                                 }
                             }
                         })
-                        callbackKeys[KEY_OSMAND_LOGCAT_LISTENER] = aidlHelper.registerForLogcatMessages(true, 0, checkedLogsLevel)
+                        callbackKeys[KEY_OSMAND_LOGCAT_LISTENER] =
+                            aidlHelper.registerForLogcatMessages(true, 0, checkedLogsLevel)
                     }
                     alert.setNegativeButton("Cancel", null)
                     alert.show()
                 }
+
                 ApiActionType.AIDL_UNREGISTER_FROM_LISTEN_LOGS -> {
                     logcatToastQueue.cancelAll()
                     if (callbackKeys.containsKey(KEY_OSMAND_LOGCAT_LISTENER)) {
-                        aidlHelper.registerForLogcatMessages(false, callbackKeys[KEY_OSMAND_LOGCAT_LISTENER]!!, "")
+                        aidlHelper.registerForLogcatMessages(
+                            false,
+                            callbackKeys[KEY_OSMAND_LOGCAT_LISTENER]!!,
+                            ""
+                        )
                         callbackKeys.remove(KEY_OSMAND_LOGCAT_LISTENER)
-                        logcatToastQueue.showToast(this@MainActivity, "Unsubscribed from Logcat messages")
+                        logcatToastQueue.showToast(
+                            this@MainActivity,
+                            "Unsubscribed from Logcat messages"
+                        )
                     } else {
-                        logcatToastQueue.showToast(this@MainActivity, "You need first to subscribe to OsmAnd Logcat")
+                        logcatToastQueue.showToast(
+                            this@MainActivity,
+                            "You need first to subscribe to OsmAnd Logcat"
+                        )
                     }
                 }
+
                 else -> Unit
             }
             // location depended types
             if (location != null) {
                 when (apiActionType) {
                     ApiActionType.AIDL_ADD_FAVORITE -> {
-                        aidlHelper.addFavorite(location.lat, location.lon, location.name,
-                                location.name + " city", "Cities", "red", "", true)
+                        aidlHelper.addFavorite(
+                            location.lat, location.lon, location.name,
+                            location.name + " city", "Cities", "red", "", true
+                        )
                     }
+
                     ApiActionType.AIDL_UPDATE_FAVORITE -> {
-                        aidlHelper.updateFavorite(location.lat, location.lon, location.name, "Cities",
-                                location.lat, location.lon, location.name, location.name + " city", "Cities", "yellow", true)
+                        aidlHelper.updateFavorite(
+                            location.lat,
+                            location.lon,
+                            location.name,
+                            "Cities",
+                            location.lat,
+                            location.lon,
+                            location.name,
+                            location.name + " city",
+                            "Cities",
+                            "yellow",
+                            true
+                        )
                     }
+
                     ApiActionType.AIDL_REMOVE_FAVORITE -> {
-                        aidlHelper.removeFavorite(location.lat, location.lon, location.name, "Cities")
+                        aidlHelper.removeFavorite(
+                            location.lat,
+                            location.lon,
+                            location.name,
+                            "Cities"
+                        )
                     }
+
                     ApiActionType.AIDL_ADD_MAP_MARKER -> {
                         aidlHelper.addMapMarker(location.lat, location.lon, location.name)
                     }
+
                     ApiActionType.AIDL_UPDATE_MAP_MARKER -> {
-                        aidlHelper.updateMapMarker(location.lat, location.lon, location.name,
-                                location.lat, location.lon, location.name + " " + counter++)
+                        aidlHelper.updateMapMarker(
+                            location.lat, location.lon, location.name,
+                            location.lat, location.lon, location.name + " " + counter++
+                        )
                     }
+
                     ApiActionType.AIDL_REMOVE_MAP_MARKER -> {
                         aidlHelper.removeMapMarker(location.lat, location.lon, location.name)
                     }
+
                     ApiActionType.AIDL_SHOW_MAP_POINT -> {
                         aidlHelper.showMapPoint(
-                                MAP_LAYER_ID,
-                                "id_" + location.name,
-                                location.name.substring(0, 1),
-                                location.name,
-                                "City",
-                                Color.GREEN,
-                                ALatLon(location.lat, location.lon),
-                                listOf("Big city", "Population: ..."),
-                                mapOf(AMapPoint.POINT_SPEED_PARAM to "4.0", AMapPoint.POINT_TYPE_ICON_NAME_PARAM to "ic_type_address")
+                            MAP_LAYER_ID,
+                            "id_" + location.name,
+                            location.name.substring(0, 1),
+                            location.name,
+                            "City",
+                            Color.GREEN,
+                            ALatLon(location.lat, location.lon),
+                            listOf("Big city", "Population: ..."),
+                            mapOf(
+                                AMapPoint.POINT_SPEED_PARAM to "4.0",
+                                AMapPoint.POINT_TYPE_ICON_NAME_PARAM to "ic_type_address"
+                            )
                         )
                     }
+
                     ApiActionType.AIDL_ADD_MAP_POINT -> {
                         aidlHelper.addMapPoint(
-                                MAP_LAYER_ID,
-                                "id_" + location.name,
-                                location.name.substring(0, 1),
-                                location.name,
-                                "City",
-                                Color.GREEN,
-                                ALatLon(location.lat, location.lon),
-                                listOf("Big city", "Population: ..."),
-                                mapOf(AMapPoint.POINT_SPEED_PARAM to "4.0", AMapPoint.POINT_TYPE_ICON_NAME_PARAM to "ic_type_address")
+                            MAP_LAYER_ID,
+                            "id_" + location.name,
+                            location.name.substring(0, 1),
+                            location.name,
+                            "City",
+                            Color.GREEN,
+                            ALatLon(location.lat, location.lon),
+                            listOf("Big city", "Population: ..."),
+                            mapOf(
+                                AMapPoint.POINT_SPEED_PARAM to "4.0",
+                                AMapPoint.POINT_TYPE_ICON_NAME_PARAM to "ic_type_address"
+                            )
                         )
                     }
+
                     ApiActionType.AIDL_UPDATE_MAP_POINT -> {
                         aidlHelper.updateMapPoint(
-                                MAP_LAYER_ID,
-                                "id_" + location.name,
-                                location.name.substring(1, 2),
-                                location.name,
-                                "City",
-                                Color.RED,
-                                ALatLon(location.lat, location.lon),
-                                listOf("Big city", "Population: unknown"),
-                                mapOf(AMapPoint.POINT_SPEED_PARAM to "4.0", AMapPoint.POINT_TYPE_ICON_NAME_PARAM to "ic_type_address")
+                            MAP_LAYER_ID,
+                            "id_" + location.name,
+                            location.name.substring(1, 2),
+                            location.name,
+                            "City",
+                            Color.RED,
+                            ALatLon(location.lat, location.lon),
+                            listOf("Big city", "Population: unknown"),
+                            mapOf(
+                                AMapPoint.POINT_SPEED_PARAM to "4.0",
+                                AMapPoint.POINT_TYPE_ICON_NAME_PARAM to "ic_type_address"
+                            )
                         )
                     }
+
                     ApiActionType.AIDL_REMOVE_MAP_POINT -> {
                         aidlHelper.removeMapPoint(MAP_LAYER_ID, "id_" + location.name)
                     }
-                    ApiActionType.AIDL_TAKE_PHOTO -> {
-                        aidlHelper.takePhotoNote(location.lat, location.lon)
-                    }
-                    ApiActionType.AIDL_START_VIDEO_REC -> {
-                        aidlHelper.startVideoRecording(location.lat, location.lon)
-                    }
-                    ApiActionType.AIDL_START_AUDIO_REC -> {
-                        aidlHelper.startAudioRecording(location.lat, location.lon)
-                    }
-                    ApiActionType.AIDL_SET_MAP_LOCATION -> {
-                        aidlHelper.setMapLocation(location.lat, location.lon, 16, 0f, true)
-                    }
+//
+//                    ApiActionType.AIDL_TAKE_PHOTO -> {
+//                        aidlHelper.takePhotoNote(location.lat, location.lon)
+//                    }
+//
+//                    ApiActionType.AIDL_START_VIDEO_REC -> {
+//                        aidlHelper.startVideoRecording(location.lat, location.lon)
+//                    }
+
+//                    ApiActionType.AIDL_START_AUDIO_REC -> {
+//                        aidlHelper.startAudioRecording(location.lat, location.lon)
+//                    }
+//
+//                    ApiActionType.AIDL_SET_MAP_LOCATION -> {
+//                        aidlHelper.setMapLocation(location.lat, location.lon, 16, 0f, true)
+//                    }
+
                     ApiActionType.AIDL_NAVIGATE -> {
-                        aidlHelper.navigate(location.name + " start",
-                                location.latStart, location.lonStart,
-                                location.name + " finish", location.lat, location.lon,
-                                "bicycle", true, true)
+                   /*     aidlHelper.navigate(
+                            " Enterance1",
+                            40.86523, 14.22554,
+                            "Destination1", 40.86382, 14.22201,
+                            "bicycle", true, false
+                        )*/
+                        aidlHelper.navigate(
+                            location.name + " start",
+                            location.latStart, location.lonStart,
+                            location.name + " finish", location.lat, location.lon,
+                            "bicycle", true, true
+                        )
                     }
+
+
+
                     ApiActionType.AIDL_NAVIGATE_SEARCH -> {
                         val alert = AlertDialog.Builder(this)
                         val editText = EditText(this)
@@ -823,15 +1170,18 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                         alert.setPositiveButton("Navigate") { _, _ ->
                             val text = editText.text.toString()
                             Handler().postDelayed({
-                                aidlHelper.navigateSearch(location.name + " start",
-                                        location.latStart, location.lonStart,
-                                        text, location.latStart, location.lonStart,
-                                        "car", true, true)
+                                aidlHelper.navigateSearch(
+                                    location.name + " start",
+                                    location.latStart, location.lonStart,
+                                    text, location.latStart, location.lonStart,
+                                    "car", true, true
+                                )
                             }, delay)
                         }
                         alert.setNegativeButton("Cancel", null)
                         alert.show()
                     }
+
                     ApiActionType.AIDL_SEARCH -> {
                         val alert = AlertDialog.Builder(this)
                         val editText = EditText(this)
@@ -841,36 +1191,55 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                             progressDialog?.setTitle("Searching...")
                             progressDialog?.show()
                             val text = editText.text.toString()
-                            aidlHelper.search(text, SearchParams.SEARCH_TYPE_ALL, location.latStart, location.lonStart, 1, 50)
+                            aidlHelper.search(
+                                text,
+                                SearchParams.SEARCH_TYPE_ALL,
+                                location.latStart,
+                                location.lonStart,
+                                1,
+                                50
+                            )
                         }
                         alert.setNegativeButton("Cancel", null)
                         alert.show()
                     }
+
                     ApiActionType.INTENT_ADD_FAVORITE -> {
-                        osmandHelper.addFavorite(location.lat, location.lon, location.name,
-                                location.name + " city", "Cities", "red", true)
+                        osmandHelper.addFavorite(
+                            location.lat, location.lon, location.name,
+                            location.name + " city", "Cities", "red", true
+                        )
                     }
+
                     ApiActionType.INTENT_ADD_MAP_MARKER -> {
                         osmandHelper.addMapMarker(location.lat, location.lon, location.name)
                     }
+
                     ApiActionType.INTENT_SHOW_LOCATION -> {
                         osmandHelper.showLocation(location.lat, location.lon)
                     }
+
                     ApiActionType.INTENT_TAKE_PHOTO -> {
                         osmandHelper.takePhoto(location.lat, location.lon)
                     }
+
                     ApiActionType.INTENT_START_VIDEO_REC -> {
                         osmandHelper.recordVideo(location.lat, location.lon)
                     }
+
                     ApiActionType.INTENT_START_AUDIO_REC -> {
                         osmandHelper.recordAudio(location.lat, location.lon)
                     }
+
                     ApiActionType.INTENT_NAVIGATE -> {
-                        osmandHelper.navigate(location.name + " start",
-                                location.latStart, location.lonStart,
-                                location.name + " finish", location.lat, location.lon,
-                                "bicycle", true, true)
+                        osmandHelper.navigate(
+                            location.name + " start",
+                            location.latStart, location.lonStart,
+                            location.name + " finish", location.lat, location.lon,
+                            "bicycle", true, true
+                        )
                     }
+
                     ApiActionType.INTENT_NAVIGATE_SEARCH -> {
                         val alert = AlertDialog.Builder(this)
                         val editText = EditText(this)
@@ -878,14 +1247,17 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                         alert.setView(editText)
                         alert.setPositiveButton("Navigate") { _, _ ->
                             val text = editText.text.toString()
-                            osmandHelper.navigateSearch(location.name + " start",
-                                    location.latStart, location.lonStart,
-                                    text, location.latStart, location.lonStart,
-                                    "car", true, true)
+                            osmandHelper.navigateSearch(
+                                location.name + " start",
+                                location.latStart, location.lonStart,
+                                text, location.latStart, location.lonStart,
+                                "car", true, true
+                            )
                         }
                         alert.setNegativeButton("Cancel", null)
                         alert.show()
                     }
+
                     else -> Unit
                 }
             }
@@ -903,8 +1275,8 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
                 showSearchResultsDialogFragment(it, lastLatitude, lastLongitude)
             }
         }
-
         progressDialog = ProgressDialog(this)
+
 
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
@@ -913,53 +1285,85 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
 
         // Intents
         binding.addFavoriteButton.setOnClickListener {
-            showChooseLocationDialogFragment("Add favourite", ApiActionType.INTENT_ADD_FAVORITE, false)
+            showChooseLocationDialogFragment(
+                "Add favourite",
+                ApiActionType.INTENT_ADD_FAVORITE,
+                false
+            )
         }
         binding.addMapMarkerButton.setOnClickListener {
-            showChooseLocationDialogFragment("Add map marker", ApiActionType.INTENT_ADD_MAP_MARKER, false)
+            showChooseLocationDialogFragment(
+                "Add map marker",
+                ApiActionType.INTENT_ADD_MAP_MARKER,
+                false
+            )
         }
 
         binding.showLocationButton.setOnClickListener {
-            showChooseLocationDialogFragment("Show location", ApiActionType.INTENT_SHOW_LOCATION, false)
+            showChooseLocationDialogFragment(
+                "Show location",
+                ApiActionType.INTENT_SHOW_LOCATION,
+                false
+            )
         }
 
-        binding.startAudioRecButton.setOnClickListener {
-            showChooseLocationDialogFragment("Start audio recording", ApiActionType.INTENT_START_AUDIO_REC, false)
-        }
-        binding.startVideoRecButton.setOnClickListener {
-            showChooseLocationDialogFragment("Start video recording", ApiActionType.INTENT_START_VIDEO_REC, false)
-        }
-        binding.takePhotoButton.setOnClickListener {
-            showChooseLocationDialogFragment("Take photo", ApiActionType.INTENT_TAKE_PHOTO, false)
-        }
-        binding.stopRecButton.setOnClickListener { mOsmAndHelper!!.stopAvRec() }
+//        binding.startAudioRecButton.setOnClickListener {
+//            showChooseLocationDialogFragment(
+//                "Start audio recording",
+//                ApiActionType.INTENT_START_AUDIO_REC,
+//                false
+//            )
+//        }
+//        binding.startVideoRecButton.setOnClickListener {
+//            showChooseLocationDialogFragment(
+//                "Start video recording",
+//                ApiActionType.INTENT_START_VIDEO_REC,
+//                false
+//            )
+//        }
+//        binding.takePhotoButton.setOnClickListener {
+//            showChooseLocationDialogFragment("Take photo", ApiActionType.INTENT_TAKE_PHOTO, false)
+//        }
+       // binding.stopRecButton.setOnClickListener { mOsmAndHelper!!.stopAvRec() }
         binding.startGpxRecButton.setOnClickListener {
             val args = Bundle()
             args.putString(ACTION_CODE_KEY, ActionType.START_GPX_REC.name)
             val closeAfterCommandDialogFragment = CloseAfterCommandDialogFragment()
             closeAfterCommandDialogFragment.arguments = args
-            closeAfterCommandDialogFragment.show(supportFragmentManager, CloseAfterCommandDialogFragment.TAG)
+            closeAfterCommandDialogFragment.show(
+                supportFragmentManager,
+                CloseAfterCommandDialogFragment.TAG
+            )
         }
         binding.stopGpxRecButton.setOnClickListener {
             val args = Bundle()
             args.putString(ACTION_CODE_KEY, ActionType.STOP_GPX_REC.name)
             val closeAfterCommandDialogFragment = CloseAfterCommandDialogFragment()
             closeAfterCommandDialogFragment.arguments = args
-            closeAfterCommandDialogFragment.show(supportFragmentManager, CloseAfterCommandDialogFragment.TAG)
+            closeAfterCommandDialogFragment.show(
+                supportFragmentManager,
+                CloseAfterCommandDialogFragment.TAG
+            )
         }
         binding.saveGpxButton.setOnClickListener {
             val args = Bundle()
             args.putString(ACTION_CODE_KEY, ActionType.SAVE_GPX.name)
             val closeAfterCommandDialogFragment = CloseAfterCommandDialogFragment()
             closeAfterCommandDialogFragment.arguments = args
-            closeAfterCommandDialogFragment.show(supportFragmentManager, CloseAfterCommandDialogFragment.TAG)
+            closeAfterCommandDialogFragment.show(
+                supportFragmentManager,
+                CloseAfterCommandDialogFragment.TAG
+            )
         }
         binding.clearGpxButton.setOnClickListener {
             val args = Bundle()
             args.putString(ACTION_CODE_KEY, ActionType.CLEAR_GPX.name)
             val closeAfterCommandDialogFragment = CloseAfterCommandDialogFragment()
             closeAfterCommandDialogFragment.arguments = args
-            closeAfterCommandDialogFragment.show(supportFragmentManager, CloseAfterCommandDialogFragment.TAG)
+            closeAfterCommandDialogFragment.show(
+                supportFragmentManager,
+                CloseAfterCommandDialogFragment.TAG
+            )
         }
         binding.showGpxButton.setOnClickListener {
             val args = Bundle()
@@ -981,7 +1385,11 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
             showChooseLocationDialogFragment("Navigate to", ApiActionType.INTENT_NAVIGATE, false)
         }
         binding.navigateSearchButton.setOnClickListener {
-            showChooseLocationDialogFragment("Search and Navigate", ApiActionType.INTENT_NAVIGATE_SEARCH, false)
+            showChooseLocationDialogFragment(
+                "Search and Navigate",
+                ApiActionType.INTENT_NAVIGATE_SEARCH,
+                false
+            )
         }
         binding.pauseNavigationButton.setOnClickListener {
             mOsmAndHelper!!.pauseNavigation()
@@ -1007,10 +1415,16 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
             showChooseLocationDialogFragment("Add map marker", ApiActionType.AIDL_ADD_MAP_MARKER)
         }
         binding.aidlRemoveMapMarkerButton.setOnClickListener {
-            showChooseLocationDialogFragment("Remove map marker", ApiActionType.AIDL_REMOVE_MAP_MARKER)
+            showChooseLocationDialogFragment(
+                "Remove map marker",
+                ApiActionType.AIDL_REMOVE_MAP_MARKER
+            )
         }
         binding.aidlUpdateMapMarkerButton.setOnClickListener {
-            showChooseLocationDialogFragment("Update map marker", ApiActionType.AIDL_UPDATE_MAP_MARKER)
+            showChooseLocationDialogFragment(
+                "Update map marker",
+                ApiActionType.AIDL_UPDATE_MAP_MARKER
+            )
         }
         binding.aidlRemoveAllActiveMapMarkersButton.setOnClickListener {
             execApiActionImpl(ApiActionType.AIDL_REMOVE_ALL_ACTIVE_MAP_MARKERS)
@@ -1043,10 +1457,16 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
             showChooseLocationDialogFragment("Add map point", ApiActionType.AIDL_ADD_MAP_POINT)
         }
         binding.aidlRemoveMapPointButton.setOnClickListener {
-            showChooseLocationDialogFragment("Remove map point", ApiActionType.AIDL_REMOVE_MAP_POINT)
+            showChooseLocationDialogFragment(
+                "Remove map point",
+                ApiActionType.AIDL_REMOVE_MAP_POINT
+            )
         }
         binding.aidlUpdateMapPointButton.setOnClickListener {
-            showChooseLocationDialogFragment("Update map point", ApiActionType.AIDL_UPDATE_MAP_POINT)
+            showChooseLocationDialogFragment(
+                "Update map point",
+                ApiActionType.AIDL_UPDATE_MAP_POINT
+            )
         }
         binding.aidlShowMapPointButton.setOnClickListener {
             showChooseLocationDialogFragment("Show map point", ApiActionType.AIDL_SHOW_MAP_POINT)
@@ -1115,7 +1535,10 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
         // Location
 
         binding.aidlSetMapLocationButton.setOnClickListener {
-            showChooseLocationDialogFragment("Set map location", ApiActionType.AIDL_SET_MAP_LOCATION)
+            showChooseLocationDialogFragment(
+                "Set map location",
+                ApiActionType.AIDL_SET_MAP_LOCATION
+            )
         }
         binding.aidlStartGpxRecordingButton.setOnClickListener {
             execApiAction(ApiActionType.AIDL_START_GPX_REC)
@@ -1130,10 +1553,16 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
             showChooseLocationDialogFragment("Take photo", ApiActionType.AIDL_TAKE_PHOTO)
         }
         binding.aidlStartVideoRecordingButton.setOnClickListener {
-            showChooseLocationDialogFragment("Start video recording", ApiActionType.AIDL_START_VIDEO_REC)
+            showChooseLocationDialogFragment(
+                "Start video recording",
+                ApiActionType.AIDL_START_VIDEO_REC
+            )
         }
         binding.aidlStartAudioRecordingButton.setOnClickListener {
-            showChooseLocationDialogFragment("Start audio recording", ApiActionType.AIDL_START_AUDIO_REC)
+            showChooseLocationDialogFragment(
+                "Start audio recording",
+                ApiActionType.AIDL_START_AUDIO_REC
+            )
         }
         binding.aidlStopRecordingButton.setOnClickListener {
             execApiAction(ApiActionType.AIDL_STOP_REC)
@@ -1174,7 +1603,11 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
         }
 
         binding.aidlNavigateSearchButton.setOnClickListener {
-            showChooseLocationDialogFragment("Search and navigate to", ApiActionType.AIDL_NAVIGATE_SEARCH, false)
+            showChooseLocationDialogFragment(
+                "Search and navigate to",
+                ApiActionType.AIDL_NAVIGATE_SEARCH,
+                false
+            )
         }
 
         binding.aidlRegisterForNavigationUpdatesButton.setOnClickListener {
@@ -1338,7 +1771,11 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
         binding.aidlStopListenToOsmAndLogs.setOnClickListener {
             execApiActionImpl(ApiActionType.AIDL_UNREGISTER_FROM_LISTEN_LOGS)
         }
+        binding.testNavigationButton.setOnClickListener {
+            execApiActionImpl(ApiActionType.AIDL_NAVIGATE, Location("Enterance1", 40.86382, 14.22201, 40.86523, 14.22554))
+        }
     }
+
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == REQUEST_OSMAND_API) {
@@ -1436,10 +1873,11 @@ class MainActivity : AppCompatActivity(), OsmAndHelper.OnOsmandMissingListener {
         setDrawable(binding.addFavoriteButton, R.drawable.ic_action_fav_dark)
         setDrawable(binding.addMapMarkerButton, R.drawable.ic_action_flag_dark)
         setDrawable(binding.showLocationButton, R.drawable.ic_action_flag_dark)
-        setDrawable(binding.startAudioRecButton, R.drawable.ic_action_micro_dark)
-        setDrawable(binding.startVideoRecButton, R.drawable.ic_action_video_dark)
-        setDrawable(binding.stopRecButton, R.drawable.ic_action_rec_stop)
-        setDrawable(binding.takePhotoButton, R.drawable.ic_action_photo_dark)
+        setDrawable(binding.testNavigationButton, R.drawable.ic_action_gdirections_dark)
+//        setDrawable(binding.startAudioRecButton, R.drawable.ic_action_micro_dark)
+//        setDrawable(binding.startVideoRecButton, R.drawable.ic_action_video_dark)
+//        setDrawable(binding.stopRecButton, R.drawable.ic_action_rec_stop)
+//        setDrawable(binding.takePhotoButton, R.drawable.ic_action_photo_dark)
         setDrawable(binding.startGpxRecButton, R.drawable.ic_action_play)
         setDrawable(binding.stopGpxRecButton, R.drawable.ic_action_rec_stop)
         setDrawable(binding.showGpxButton, R.drawable.ic_action_polygom_dark)

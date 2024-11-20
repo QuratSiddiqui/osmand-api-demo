@@ -55,7 +55,7 @@ public class PointsOnMapActivity extends AppCompatActivity {
 
 		//set start location and zoom for map
 		mapTileView.setIntZoom(14);
-		mapTileView.setLatLon(52.3704312, 4.8904288);
+		mapTileView.setLatLon(40.86523, 14.22554);
 	}
 
 	@Override
@@ -87,9 +87,9 @@ public class PointsOnMapActivity extends AppCompatActivity {
 
 	private List<FavouritePoint> getFavouritePoints() {
 		List<FavouritePoint> points = new ArrayList<>();
-		points.add(new FavouritePoint(50.8465565, 4.351697, "Brussel", "cities"));
-		points.add(new FavouritePoint(51.5073219, -0.1276474, "London", "cities"));
-		points.add(new FavouritePoint(48.8566101, 2.3514992, "Paris", "cities"));
+		points.add(new FavouritePoint(40.86523, 14.22554, "Enterance 1", "Entrance"));
+		points.add(new FavouritePoint(40.86598, 14.22209, "Enterance 2", "Entrance"));
+		points.add(new FavouritePoint(40.86523, 14.22554, "Enterance 3", "Entrance"));
 		points.add(new FavouritePoint(47.4983815, 19.0404707, "Budapest", "cities"));
 		points.add(new FavouritePoint(55.7506828, 37.6174976, "Moscow", "cities"));
 		points.add(new FavouritePoint(39.9059631, 116.391248, "Beijing", "cities"));
